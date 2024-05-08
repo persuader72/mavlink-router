@@ -68,6 +68,7 @@ const ConfFile::OptionsTable UartEndpoint::option_table[] = {
     {"BlockSrcSysOut",  false, ConfFile::parse_uint8_vector,    OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, block_src_sys_out)},
     {"AllowMsgIdIn",    false, ConfFile::parse_uint32_vector,   OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, allow_msg_id_in)},
     {"BlockMsgIdIn",    false, ConfFile::parse_uint32_vector,   OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, block_msg_id_in)},
+    {"BlockCmdIdIn",    false, ConfFile::parse_uint8_vector,    OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, block_cmd_id_in)},
     {"AllowSrcCompIn",  false, ConfFile::parse_uint8_vector,    OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, allow_src_comp_in)},
     {"BlockSrcCompIn",  false, ConfFile::parse_uint8_vector,    OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, block_src_comp_in)},
     {"AllowSrcSysIn",   false, ConfFile::parse_uint8_vector,    OPTIONS_TABLE_STRUCT_FIELD(UartEndpointConfig, allow_src_sys_in)},
@@ -90,6 +91,7 @@ const ConfFile::OptionsTable UdpEndpoint::option_table[] = {
     {"BlockSrcSysOut",  false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, block_src_sys_out)},
     {"AllowMsgIdIn",    false,  ConfFile::parse_uint32_vector,  OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, allow_msg_id_in)},
     {"BlockMsgIdIn",    false,  ConfFile::parse_uint32_vector,  OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, block_msg_id_in)},
+    {"BlockCmdIdIn",    false, ConfFile::parse_uint8_vector,    OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, block_cmd_id_in)},
     {"AllowSrcCompIn",  false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, allow_src_comp_in)},
     {"BlockSrcCompIn",  false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, block_src_comp_in)},
     {"AllowSrcSysIn",   false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(UdpEndpointConfig, allow_src_sys_in)},
@@ -111,6 +113,7 @@ const ConfFile::OptionsTable TcpEndpoint::option_table[] = {
     {"BlockSrcSysOut",  false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, block_src_sys_out)},
     {"AllowMsgIdIn",    false,  ConfFile::parse_uint32_vector,  OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, allow_msg_id_in)},
     {"BlockMsgIdIn",    false,  ConfFile::parse_uint32_vector,  OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, block_msg_id_in)},
+    {"BlockCmdIdIn",    false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, block_cmd_id_in)},
     {"AllowSrcCompIn",  false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, allow_src_comp_in)},
     {"BlockSrcCompIn",  false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, block_src_comp_in)},
     {"AllowSrcSysIn",   false,  ConfFile::parse_uint8_vector,   OPTIONS_TABLE_STRUCT_FIELD(TcpEndpointConfig, allow_src_sys_in)},
@@ -604,6 +607,11 @@ bool Endpoint::allowed_by_incoming_filters(const buffer *buf) const
         return false;
     }
 
+    // If filter is defined and message is in the set: discard it   
+    if (buf->curr.msg_id == MAVLINK_MSG_ID_COMMAND_INT && !_blocked_incoming_cmd_long.empty()) {
+        mavlink_get_message_info_by_name("COMMAND_INT")
+    }
+
     // If filter is defined and message is not in the set: discard it
     if (!_allowed_incoming_src_comps.empty()
         && !vector_contains(_allowed_incoming_src_comps, buf->curr.src_compid)) {
@@ -774,6 +782,9 @@ bool UartEndpoint::setup(UartEndpointConfig conf)
 
     for (auto msg_id : conf.allow_msg_id_in) {
         this->filter_add_allowed_in_msg_id(msg_id);
+    }
+    for (auto cmd_id : conf.block_cmd_id_in) {
+        this->filter_add_blocked_in_cmd_id(cmd_id);
     }
     for (auto msg_id : conf.block_msg_id_in) {
         this->filter_add_blocked_in_msg_id(msg_id);
@@ -1111,6 +1122,9 @@ bool UdpEndpoint::setup(UdpEndpointConfig conf)
     }
     for (auto msg_id : conf.block_msg_id_in) {
         this->filter_add_blocked_in_msg_id(msg_id);
+    }
+    for (auto cmd_id : conf.block_cmd_id_in) {
+        this->filter_add_blocked_in_cmd_id(cmd_id);
     }
     for (auto src_comp : conf.allow_src_comp_in) {
         this->filter_add_allowed_in_src_comp(src_comp);
@@ -1483,6 +1497,9 @@ bool TcpEndpoint::setup(TcpEndpointConfig conf)
     }
     for (auto msg_id : conf.block_msg_id_in) {
         this->filter_add_blocked_in_msg_id(msg_id);
+    }
+    for (auto cmd_id : conf.block_cmd_id_in) {
+        this->filter_add_blocked_in_cmd_id(cmd_id);
     }
     for (auto src_comp : conf.allow_src_comp_in) {
         this->filter_add_allowed_in_src_comp(src_comp);

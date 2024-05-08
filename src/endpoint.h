@@ -49,6 +49,7 @@ struct UartEndpointConfig {
     std::vector<uint8_t> block_src_sys_out;
     std::vector<uint32_t> allow_msg_id_in;
     std::vector<uint32_t> block_msg_id_in;
+    std::vector<uint8_t> block_cmd_id_in;
     std::vector<uint8_t> allow_src_comp_in;
     std::vector<uint8_t> block_src_comp_in;
     std::vector<uint8_t> allow_src_sys_in;
@@ -71,6 +72,7 @@ struct UdpEndpointConfig {
     std::vector<uint8_t> block_src_sys_out;
     std::vector<uint32_t> allow_msg_id_in;
     std::vector<uint32_t> block_msg_id_in;
+    std::vector<uint8_t> block_cmd_id_in;
     std::vector<uint8_t> allow_src_comp_in;
     std::vector<uint8_t> block_src_comp_in;
     std::vector<uint8_t> allow_src_sys_in;
@@ -91,6 +93,7 @@ struct TcpEndpointConfig {
     std::vector<uint8_t> block_src_sys_out;
     std::vector<uint32_t> allow_msg_id_in;
     std::vector<uint32_t> block_msg_id_in;
+    std::vector<uint8_t> block_cmd_id_in;
     std::vector<uint8_t> allow_src_comp_in;
     std::vector<uint8_t> block_src_comp_in;
     std::vector<uint8_t> allow_src_sys_in;
@@ -207,6 +210,10 @@ public:
     {
         _allowed_incoming_msg_ids.push_back(msg_id);
     }
+    void filter_add_blocked_in_cmd_id(uint32_t cmd_id)
+    {
+        _blocked_incoming_cmd_long.push_back(cmd_id);
+    }
     void filter_add_blocked_in_msg_id(uint32_t msg_id)
     {
         _blocked_incoming_msg_ids.push_back(msg_id);
@@ -285,6 +292,7 @@ private:
     std::vector<uint8_t> _blocked_outgoing_src_systems;
     std::vector<uint32_t> _allowed_incoming_msg_ids;
     std::vector<uint32_t> _blocked_incoming_msg_ids;
+    std::vector<uint8_t> _blocked_incoming_cmd_long;
     std::vector<uint8_t> _allowed_incoming_src_comps;
     std::vector<uint8_t> _blocked_incoming_src_comps;
     std::vector<uint8_t> _allowed_incoming_src_systems;

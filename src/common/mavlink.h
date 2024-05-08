@@ -17,4 +17,6 @@
 #    pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 #endif
 #include <mavlink.h>
+#include <mavlink_get_info.h>
+#include <mavlink_msg_command_int.h>
 #pragma GCC diagnostic pop
